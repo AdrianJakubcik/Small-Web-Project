@@ -1,0 +1,46 @@
+.menu-container {
+    width: 100%;
+    height: 50px;
+    background-color: #4d4d4d;
+    z-index: 10;
+    position: relative;
+}
+
+.menu-right {
+    float: right;
+}
+
+.menu-left {
+    float: left;
+}
+
+.buttons {
+    display: inline-flex;
+}
+
+.button {
+    width: 100%;
+    height: 100%;
+    display: inline-flex;
+    padding: 11px 30px 12px 30px;
+    position: relative;
+    color: white;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.menu-left .button:first-child {
+    margin-left: -40px;
+}
+
+.button:hover {
+    background-color: #8c8c8c;
+    font-size: 20px;
+}
+
+.menu-right .button:first-child {
+    padding: 11px 20px 12px 30px;
+}
