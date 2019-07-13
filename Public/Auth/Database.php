@@ -1,11 +1,12 @@
 <?php
 
-//require
+require("../../Confg/config.php");
+require("../../Private/Cryptography.php");
 
- $host = "localhost";
- $username = "area51_user";
- $password = "area51";
- $database = "area51db";
+ $host = constant("host");
+ $username = constant("username");
+ $password = constant("password");
+ $database = constant("database");
  $conn = new mysqli($host,$username,$password,$database);
  if($conn->connect_error)
  {
@@ -13,11 +14,30 @@
  }
 
 
+function ProccessNewUser($user, $password, $email, $dbconn) {
+    $user = TestInput($user);
+    $date = date("Y-m-d");
+    $salt = GenerateNewSalt();
+    $password = AdvancedEncryptionWithSalt($password,$salt);
+    AddNewUserToDB($user,$date,$password,$salt,$email,$dbconn);
+}
+
+function AddNewUserToDB($user,$date,$password,$salt,$email,$dbconn){
+    $stmt = $dbconn->prepare('INSERT INTO clients (USERNAME,PASSWORD,KEY_SALT,EMAIL,REG_DATE) VALUES (?,?,?,?,?)');
+    $stmt->bind_param('sssss',$user,$password,$salt,$email,$date);
+    if($stmt->execute()){
+        echo(" Registration was successfull! " . $user);
+        return;
+    } else{
+        die("Registration Failed Due To Error " . $stmt->execute());
+    }
+}
+
  function NewUser($user,$password,$email, $conn) {
      $res = BeforeAddingToDBChecks($user,$email,$conn);
     if($res == "true")
     {
-        
+        ProccessNewUser($user,$password,$email,$conn);
     } else {
         die("Registration failed: " . $res);
     }
@@ -74,9 +94,6 @@ function TestInput($data) {
     return $data;
 }
 
-function AddToDB($user, $password, $date, $salt, $dbconn) {
-    $user = TestInput($user);
-    
-}
+
 
 ?>
