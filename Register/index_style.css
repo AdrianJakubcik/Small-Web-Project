@@ -1,12 +1,15 @@
 @import url('https://fonts.googleapis.com/css?family=Lato:300,400,700');
 body {
-    background-color: #737373;
-    z-index: -10;
+    background-image: linear-gradient( #737373, #adadad) !important;
+    z-index: 10;
+    max-height: 100vh !important;
+    height: 100vh;
 }
 
 .container {
     font-family: 'Lato', sans-serif;
-    width: 500px;
+    max-height: auto;
+    padding-bottom: 8px;
     margin: 50px auto;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -163,4 +166,18 @@ input:focus {
     text-decoration: none;
     color: black;
     display: block;
+}
+
+@media screen and (max-height: 1080) {
+    .container {
+        margin-top: 180px !important;
+        max-width: 19.2% !important;
+    }
+}
+
+@media all and (min-height: 1200) {
+    .container {
+        margin-top: 260px !important;
+        max-width: 22.2% !important;
+    }
 }

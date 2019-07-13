@@ -9,11 +9,11 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" media="screen" href="../Menu/main_menu.css" />
 </head>
-<body style="background-color:#737373; z-index: -10;">
+<body style="z-index: -10;">
 <?php
   require("../Menu/main_menu.php");
 ?>
-<div class="container" style="max-width:22.2%; padding-bottom:8px; margin-top:300px;">
+<div class="container">
   <nav class="auth">
     <div class="login selected">Login</div>
     <div class="signup" onclick="location.href='../Register';">Register</div>

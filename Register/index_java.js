@@ -45,7 +45,6 @@ loginConfPass.addEventListener('input', function() {
             Error_First.nextElementSibling.classList.remove('show');
         } else if (Pass != Repass) {
             loginConfPass.classList.add('error');
-            Error_First.nextElementSibling.classList.add('show');
         }
     }
 })
@@ -88,3 +87,12 @@ loginForm.addEventListener('submit', function(e) {
     }
     //alert("The Value Of Pass input is [" + Pass + "]");
 })
+
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > milliseconds) {
+            break;
+        }
+    }
+}
