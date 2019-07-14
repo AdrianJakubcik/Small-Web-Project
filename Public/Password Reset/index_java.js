@@ -1,7 +1,9 @@
 const resetForm = document.querySelector('.container .reset-form');
 const resetEmail = document.querySelector('#reset-email');
-
 var email_value = document.getElementById('reset-email').value;
+
+
+
 resetEmail.addEventListener('input', function() {
     if (resetEmail.validity.valid) {
         resetEmail.classList.remove('error');
@@ -10,8 +12,6 @@ resetEmail.addEventListener('input', function() {
         resetEmail.classList.add('error');
     }
 })
-
-
 
 resetForm.addEventListener('submit', function(e) {
     if (!resetEmail.validity.valid) {
