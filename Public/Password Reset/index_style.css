@@ -17,6 +17,12 @@ body {
     background: #fff;
 }
 
+.container .container_title {
+    text-align: center;
+    font-family: 'Courier New', Courier, monospace;
+    padding-bottom: 2%;
+}
+
 nav.auth {
     display: flex;
     border-bottom: 1px solid #ccc;
@@ -65,6 +71,27 @@ input[type="email"] {
     color: #333;
 }
 
+.container .input_holder {
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.container .input_holder .msg-error {
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 105%;
+}
+
+.container .description {
+    text-align: center;
+    color: #737373;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 100%;
+}
+
+hr {
+    border: 1px solid orange !important;
+}
+
 input[type="text"]:valid,
 input[type="password"]:valid,
 input[type="email"]:valid {
@@ -78,14 +105,15 @@ input[type="email"].error {
 }
 
 input:focus {
-    border-color: orange;
+    border-color: gold;
+    opacity: 0.8;
 }
 
 .container button {
     border-radius: 3px;
     margin-top: 10px;
     font-size: 16px;
-    background: orange;
+    background: Orange;
     padding: 14px;
     width: 100%;
     border-radius: 3px;
@@ -94,10 +122,33 @@ input:focus {
     outline: none;
     cursor: pointer;
     transition: all 0.3s;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
 
 .container button:hover {
     opacity: 0.9;
+    background: rgba(255, 165, 0, 1);
+    color: black;
+    max-width: 99%;
+}
+
+.container button:active {
+    transform: scale(0.95);
+}
+
+.submit_button_holder {
+    text-align: center;
+}
+
+.label_holder {
+    text-align: center;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-size: 120%;
+    padding-top: 5%;
+}
+
+label {
+    margin-bottom: 0px !important;
 }
 
 #login,
@@ -177,50 +228,7 @@ input:focus {
 
 @media all and (min-height: 1200) {
     .container {
-        margin-top: 300px !important;
-        max-width: 22.2% !important;
+        margin-top: 245px !important;
+        max-width: 25% !important;
     }
-}
-
-.container .forgot_pw_container {
-    background: #8b8b8b;
-    border: 1px solid #5c5c5c;
-    text-align: center;
-    max-width: 40%;
-    margin-left: auto;
-    margin-right: auto;
-    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-    cursor: pointer;
-    margin-top: 4px !important;
-    border-radius: 14px;
-    font-weight: 600;
-    display: none;
-}
-
-.container .forgot_pw_container .show {
-    display: block;
-}
-
-.container .forgot_pw_container>div {
-    padding: 5px;
-}
-
-.container .forgot_pw_container:hover {
-    font-size: 105%;
-    box-shadow: 2px 1px rgb(29, 29, 29);
-    border-color: orange;
-    transform: scale(1.1);
-}
-
-.container .submit-btn {
-    margin-top: 0px !important;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 120%;
-    font-weight: 500;
-}
-
-.container .submit-btn:hover {
-    transform: scale(1.05);
 }

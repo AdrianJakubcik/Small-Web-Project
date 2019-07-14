@@ -12,6 +12,10 @@ function AdvancedEncryptionWithSalt($key, $salt){
     return $enc_str;
 }
 
+function TOKEN_GENERATE_NEW(){
+   return GenerateRandomString((int)32);
+}
+
 function GenerateRandomString($length, $keyspace = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'){
     $pieces = [];
     $max = mb_strlen($keyspace, '8bit') - 1;
