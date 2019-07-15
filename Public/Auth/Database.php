@@ -13,15 +13,16 @@ if($dbconn->connect_error){
 
 
 
-function Authenticate_Client($username, $passsword, $conn){
-    if(GetIdByName($username,$conn) != null || GetIdByName($username,$conn) != "Connection_Error")
+function Authenticate_Client($username, $passsword){
+    if(GetIdByName($username) != null || GetIdByName($username) != "Connection_Error")
     {
-        $ID = GetIdByName($username,$conn);
+        $ID = GetIdByName($username);
     }
-    $salt = GetSaltByID($ID,$conn);
+    $salt = GetSaltByID($ID);
     $enc_pass = AdvancedEncryptionWithSalt($passsword,$salt);
 
-    $stmt = $conn->prepare('SELECT * FROM clients WHERE USERNAME = ? AND `PASSWORD` = ?');
+    global $dbconn;
+    $stmt = $dbconn->prepare('SELECT * FROM clients WHERE USERNAME = ? AND `PASSWORD` = ?');
     $stmt->bind_param('ss',$username,$enc_pass);
     $stmt->execute();
     $stmt->store_result();
@@ -35,34 +36,36 @@ function Authenticate_Client($username, $passsword, $conn){
 
 }
 
-function ProccessNewUser($user, $password, $email, $dbconn) {
+function ProccessNewUser($user, $password, $email) {
     $user = TestInput($user);
     $date = date("Y-m-d");
     $salt = GenerateNewSalt();
     $password = AdvancedEncryptionWithSalt($password,$salt);
-    if(AddNewUserToDB($user,$date,$password,$salt,$email,$dbconn)){
+    if(AddNewUserToDB($user,$date,$password,$salt,$email)){
         return true;
     }else{
         return false;
     }
 }
 
-function AddNewUserToDB($user,$date,$password,$salt,$email,$dbconn){
+function AddNewUserToDB($user,$date,$password,$salt,$email){
+    global $dbconn;
     $stmt = $dbconn->prepare('INSERT INTO clients (USERNAME,PASSWORD,KEY_SALT,EMAIL,REG_DATE) VALUES (?,?,?,?,?)');
     $stmt->bind_param('sssss',$user,$password,$salt,$email,$date);
     if($stmt->execute()){
+        $stmt->close();
         return true;
     } else{
-        die("Registration Failed Due To Error " . $stmt->execute());
+        die("Registration Failed Due To Error " . $stmt->error);
         return false;
     }
 }
 
- function RegisterNewUser($user,$password,$email, $conn) {
-     $res = BeforeAddingToDBChecks($user,$email,$conn);
+ function RegisterNewUser($user,$password,$email) {
+     $res = BeforeAddingToDBChecks($user,$email);
     if($res == "true")
     {
-        if(ProccessNewUser($user,$password,$email,$conn)){
+        if(ProccessNewUser($user,$password,$email)){
             return true;
         }else{
             return false;    
@@ -73,13 +76,15 @@ function AddNewUserToDB($user,$date,$password,$salt,$email,$dbconn){
     }
  }
 
-function UserExists($user, $conn) {
-    $stmt = $conn->prepare('SELECT * FROM clients WHERE USERNAME = ?');
+function UserExists($user) {
+    global $dbconn;
+    $stmt = $dbconn->prepare('SELECT * FROM clients WHERE USERNAME = ?');
     $stmt->bind_param('s',$user);
     $stmt->execute();
 
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
+    $stmt->close();
     if($row == null)
     {
         return false;
@@ -89,13 +94,15 @@ function UserExists($user, $conn) {
     }
 }
 
-function EmailAlreadyInUse($email, $conn) {
-    $stmt = $conn->prepare('SELECT * FROM clients WHERE EMAIL = ?');
+function EmailAlreadyInUse($email) {
+    global $dbconn;
+    $stmt = $dbconn->prepare('SELECT * FROM clients WHERE EMAIL = ?');
     $stmt->bind_param('s',$email);
     $stmt->execute();
 
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
+    $stmt->close();
     if($row == null)
     {
         return false;
@@ -105,11 +112,11 @@ function EmailAlreadyInUse($email, $conn) {
     }
 }
 
-function BeforeAddingToDBChecks($user,$email,$connection) {
-    if(UserExists($user,$connection))
+function BeforeAddingToDBChecks($user,$email) {
+    if(UserExists($user))
     {
         return "Username has been taken already by someone else!";
-    }else if (EmailAlreadyInUse($email,$connection)) {
+    }else if (EmailAlreadyInUse($email)) {
         return "Email is being used already by someone else!";
     }
     else {
@@ -124,14 +131,16 @@ function TestInput($data) {
     return $data;
 }
 
-function GetIdByName($name, $conn){
-    if(CheckConnection($conn))
+function GetIdByName($name){
+    global $dbconn;
+    if(CheckConnection())
     {
-        $stmt = $conn->prepare('SELECT ID FROM clients WHERE USERNAME = ?');
+        $stmt = $dbconn->prepare('SELECT ID FROM clients WHERE USERNAME = ?');
         $stmt->bind_param('s',$name);
         $stmt->execute();
         $result = $stmt->get_result();
         $ID = $result->fetch_row();
+        $stmt->close();
         if($ID != null){
             return (int)$ID[0];
         }else {
@@ -143,14 +152,16 @@ function GetIdByName($name, $conn){
     }
 }
 
-function GetSaltByID($ID, $conn){
-    if(CheckConnection($conn))
+function GetSaltByID($ID){
+    global $dbconn;
+    if(CheckConnection())
     {
-        $stmt = $conn->prepare('SELECT `KEY_SALT` FROM clients WHERE ID = ?');
+        $stmt = $dbconn->prepare('SELECT `KEY_SALT` FROM clients WHERE ID = ?');
         $stmt->bind_param('i',$ID);
         $stmt->execute();
         $result = $stmt->get_result();
         $salt = $result->fetch_row();
+        $stmt->close();
         if($salt != null){
             return (string)$salt[0];
         }else {
@@ -162,14 +173,31 @@ function GetSaltByID($ID, $conn){
     }
 }
 
-function GetNameByID($ID, $conn){
-    if(CheckConnection($conn))
+function getSingleRecord($sql, $types = null, $params = []){
+    global $dbconn;
+    if(CheckConnection()){
+        $stmt = $dbconn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $User = $result->fetch_assoc();
+        $stmt->close();
+        return $User;
+    }else{
+        return false;
+    }
+}
+
+function GetNameByID($ID){
+    global $dbconn;
+    if(CheckConnection())
     {
-        $stmt = $conn->prepare('SELECT `NAME` FROM clients WHERE ID = ?');
+        $stmt = $dbconn->prepare('SELECT `NAME` FROM clients WHERE ID = ?');
         $stmt->bind_param('i',$ID);
         $stmt->execute();
         $result = $stmt->get_result();
         $username = $result->fetch_row();
+        $stmt->close();
         if($username != null){
             return (string)$username[0];
         }else {
@@ -181,14 +209,16 @@ function GetNameByID($ID, $conn){
     }
 }
 
-function GetEmailByID($ID, $conn){
-    if(CheckConnection($conn))
+function GetEmailByID($ID){
+    global $dbconn;
+    if(CheckConnection())
     {
-        $stmt = $conn->prepare('SELECT `EMAIL` FROM clients WHERE ID = ?');
+        $stmt = $dbconn->prepare('SELECT `EMAIL` FROM clients WHERE ID = ?');
         $stmt->bind_param('i',$ID);
         $stmt->execute();
         $result = $stmt->get_result();
         $username = $result->fetch_row();
+        $stmt->close();
         if($username != null){
             return (string)$username[0];
         }else {
@@ -200,13 +230,15 @@ function GetEmailByID($ID, $conn){
     }
 }
 
-function GetPassowrdByID($id,$conn){
-    if(CheckConnection($conn)){
-        $stmt = $conn->prepare('SELECT `PASSWORD` FROM clients WHERE ID = ?');
+function GetPassowrdByID($id){
+    global $dbconn;
+    if(CheckConnection()){
+        $stmt = $dbconn->prepare('SELECT `PASSWORD` FROM clients WHERE ID = ?');
         $stmt->bind_param('i',$id);
         $stmt->execute();
         $result = $stmt->get_result();
         $pass = $result->fetch_row();
+        $stmt->close();
         if($pass != null){   
             return $pass[0];
         }else{
@@ -217,23 +249,18 @@ function GetPassowrdByID($id,$conn){
     }
 }
 
-function GetAllDataByID($id, $conn) {
-    if(CheckConnection($conn))
+function GetAllDataByID($id) {
+    global $dbconn;
+    if(CheckConnection())
     {
-        $stmt = $conn->prepare('SELECT * FROM clients WHERE ID = ?');
+        $stmt = $dbconn->prepare('SELECT * FROM clients WHERE ID = ?');
         $stmt->bind_param('i',$id);
         $stmt->execute();
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
+        $stmt->close();
         if($row != null){
-            $Data['ID'] = $id;
-            $Data['Username'] = $row['USERNAME'];
-            $Data['Password'] = $row['PASSWORD'];
-            $Data['Email'] = $row['EMAIL'];
-            $Data['Registration'] = $row['REG_DATE'];
-            $Data['Rank'] = $row['RANK'];
-            $Data['Admin'] = $row['ISADMIN'];
-            return $Data;
+            return $row;
         }else {
             return "Not Found";
         }
@@ -243,8 +270,9 @@ function GetAllDataByID($id, $conn) {
     }
 }
 
-function CheckConnection($conn){
-    if($conn->connect_error)
+function CheckConnection(){
+    global $dbconn;
+    if($dbconn->connect_error)
     {
         return false;
     }else {
@@ -252,9 +280,10 @@ function CheckConnection($conn){
     }
 }
 
-function GetUserIDByEmail($email,$conn){
+function GetUserIDByEmail($email){
+    global $dbconn;
     $id = 0;
-    $stmt = $conn->prepare('SELECT `ID` FROM clients WHERE `EMAIL` = ?');
+    $stmt = $dbconn->prepare('SELECT `ID` FROM clients WHERE `EMAIL` = ?');
     $stmt->bind_param('s',$email);
     $stmt->execute();
     $stmt->store_result();
@@ -264,25 +293,27 @@ function GetUserIDByEmail($email,$conn){
         $stmt->close();
         return (int)$id;
     }else{
+        $stmt->close();
         return false;
     }
 }
 
-function ResetPassword($email, $conn, $new_password){
-    if(CheckConnection($conn)){
-        if(getUserIDFromResetDB($email,$conn))
+function ResetPassword($email, $new_password){
+    if(CheckConnection()){
+        if(GetUserIDByEmail($email))
         {
-            $userid = getUserIDFromResetDB($email,$conn);
+            $userid = GetUserIDByEmail($email);
         }
     } else{
         return false;
     }
 }
 
-function ResetPasswordExistsCheck($id,$conn){
+function ResetPasswordExistsCheck($id){
+    global $dbconn;
     $id = 0;
-    $email = GetEmailByID($id,$conn);
-    $stmt = $conn->prepare('SELECT ID FROM `password_resets` WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
+    $email = GetEmailByID($id);
+    $stmt = $dbconn->prepare('SELECT ID FROM `password_resets` WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
     $stmt->bind_param('is',$id,$email);
     $stmt->execute();
     $stmt->store_result();
@@ -295,15 +326,16 @@ function ResetPasswordExistsCheck($id,$conn){
     }
 }
 
-function ResetPasswordExpirationCheck($ID, $conn){
+function ResetPasswordExpirationCheck($ID){
     $expiration = "";
-    if(ResetPasswordExistsCheck($ID,$conn))
+    if(ResetPasswordExistsCheck($ID))
     {
-        $RES_ID = (int)ResetPasswordExistsCheck($ID,$conn);
+        $RES_ID = (int)ResetPasswordExistsCheck($ID);
     }else{
         return false;
     }
-    $stmt = $conn->prepare('SELECT EXPIRATION FROM `password_resets` WHERE ID = ?');
+    global $dbconn;
+    $stmt = $dbconn->prepare('SELECT EXPIRATION FROM `password_resets` WHERE ID = ?');
     $stmt->bind_param('i',$RES_ID);
     $stmt->execute();
     $stmt->store_result();
@@ -312,20 +344,21 @@ function ResetPasswordExpirationCheck($ID, $conn){
         $stmt->close();
         echo($expiration);
     }else {
+        $stmt->close();
         return false;
     }
 }
 
-function ResetToken($email, $conn){
-    if(CheckConnection($conn)){
-        if(GetUserIDByEmail($email,$conn))
+function ResetToken($email){
+    if(CheckConnection()){
+        if(GetUserIDByEmail($email))
         {
             
-            $userid = GetUserIDByEmail($email,$conn);
-            if(!CheckForExistingToken($userid,$email,$conn)){
+            $userid = GetUserIDByEmail($email);
+            if(!CheckForExistingToken($userid,$email)){
             //$token = strtoupper(bin2hex(random_bytes(26))); //Multiple Ways Of Generating Token (My Own Is Safer)
             $token = TOKEN_GENERATE_NEW();
-            if(Reset_Token_Add_DB($userid,$token,$conn)){
+            if(Reset_Token_Add_DB($userid,$token)){
                 return true;
             }else{
                 return false;
@@ -341,20 +374,22 @@ function ResetToken($email, $conn){
     }
 }
 
-function Reset_Token_Add_DB($userid,$token,$conn){
-    if(GetEmailByID($userid,$conn))
+function Reset_Token_Add_DB($userid,$token){
+    if(GetEmailByID($userid))
     {
-        $email = GetEmailByID($userid,$conn);
+        $email = GetEmailByID($userid);
     }else {
         return false;
     }
+    global $dbconn;
     $expFormat = mktime(
         date("H"), date("i"), date("s"), date("m"), date("d")+3, date("Y")
         );
     $expDate = date("Y-m-d H:i:s",$expFormat);
-    $stmt = $conn->prepare('INSERT INTO password_resets (`USER_ID`,`USER_EMAIL`,TOKEN,EXPIRATION) VALUES (?,?,?,?)');
+    $stmt = $dbconn->prepare('INSERT INTO password_resets (`USER_ID`,`USER_EMAIL`,TOKEN,EXPIRATION) VALUES (?,?,?,?)');
     $stmt->bind_param('isss',$userid,$email,$token,$expDate);
     $suc = $stmt->execute();
+    $stmt->close();
     if($suc){
         return true;
     }else {
@@ -362,8 +397,9 @@ function Reset_Token_Add_DB($userid,$token,$conn){
     }
 }
 
-function CheckForExistingToken($userid,$email,$conn){
-    $stmt = $conn->prepare('SELECT * FROM password_resets WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
+function CheckForExistingToken($userid,$email){
+    global $dbconn;
+    $stmt = $dbconn->prepare('SELECT * FROM password_resets WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
     $stmt->bind_param('is',$userid,$email);
     $stmt->execute();
     $stmt->store_result();
