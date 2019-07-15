@@ -4,6 +4,7 @@
             <li class="button" onclick="location.href='../Login';">Login</li>
             <li class="button" onclick="location.href='https://www.google.com';">Home</li>
             <li class="button" onclick="location.href='../Register';">Register</li>
+            <li class="button" onclick="location.href='../Password Reset';">Password Reset</li>
         </ul>
     </div>
     <div class="menu-right">
