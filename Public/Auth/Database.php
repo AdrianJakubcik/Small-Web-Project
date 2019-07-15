@@ -323,7 +323,8 @@ function ResetToken($email, $conn){
             
             $userid = GetUserIDByEmail($email,$conn);
             if(!CheckForExistingToken($userid,$email,$conn)){
-            $token = strtoupper(bin2hex(random_bytes(26)));
+            //$token = strtoupper(bin2hex(random_bytes(26))); //Multiple Ways Of Generating Token (My Own Is Safer)
+            $token = TOKEN_GENERATE_NEW();
             if(Reset_Token_Add_DB($userid,$token,$conn)){
                 return true;
             }else{

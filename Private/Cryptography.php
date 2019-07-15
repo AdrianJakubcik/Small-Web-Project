@@ -13,7 +13,7 @@ function AdvancedEncryptionWithSalt($key, $salt){
 }
 
 function TOKEN_GENERATE_NEW(){
-   return GenerateRandomString((int)32);
+   return GenerateRandomString(52, '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz');
 }
 
 function GenerateRandomString($length, $keyspace = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'){
