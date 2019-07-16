@@ -11,29 +11,14 @@ if($dbconn->connect_error){
     die("Connection to Database Failed!".$dbconn->connect_error);
 }
 
-
+$db_util = Database_Functions();
 
 function Authenticate_Client($username, $passsword){
-    if(GetIdByName($username) != null || GetIdByName($username) != "Connection_Error")
-    {
-        $ID = GetIdByName($username);
+    try {
+        //code...
+    } catch (\Throwable $th) {
+        throw $th;
     }
-    $salt = GetSaltByID($ID);
-    $enc_pass = AdvancedEncryptionWithSalt($passsword,$salt);
-
-    global $dbconn;
-    $stmt = $dbconn->prepare('SELECT * FROM clients WHERE USERNAME = ? AND `PASSWORD` = ?');
-    $stmt->bind_param('ss',$username,$enc_pass);
-    $stmt->execute();
-    $stmt->store_result();
-    $num_rows = $stmt->num_rows;
-    $stmt->close();
-    if($num_rows == 1 ){
-        return true;
-    }else{
-        return false;
-    }
-
 }
 
 function ProccessNewUser($user, $password, $email) {
@@ -131,166 +116,6 @@ function TestInput($data) {
     return $data;
 }
 
-function GetIdByName($name){
-    global $dbconn;
-    if(CheckConnection())
-    {
-        $stmt = $dbconn->prepare('SELECT ID FROM clients WHERE USERNAME = ?');
-        $stmt->bind_param('s',$name);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $ID = $result->fetch_row();
-        $stmt->close();
-        if($ID != null){
-            return (int)$ID[0];
-        }else {
-            return null;
-        }
-        
-    }else {
-        return "Connection_Error";
-    }
-}
-
-function GetSaltByID($ID){
-    global $dbconn;
-    if(CheckConnection())
-    {
-        $stmt = $dbconn->prepare('SELECT `KEY_SALT` FROM clients WHERE ID = ?');
-        $stmt->bind_param('i',$ID);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $salt = $result->fetch_row();
-        $stmt->close();
-        if($salt != null){
-            return (string)$salt[0];
-        }else {
-            return null;
-        }
-        
-    }else {
-        return "Connection_Error";
-    }
-}
-
-function getSingleRecord($sql, $types = null, $params = []){
-    global $dbconn;
-    if(CheckConnection()){
-        $stmt = $dbconn->prepare($sql);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $User = $result->fetch_assoc();
-        $stmt->close();
-        return $User;
-    }else{
-        return false;
-    }
-}
-
-function getMultipleRecords($sql, $types = null, $params = []){
-    global $dbconn;
-    $stmt = $dbconn->prepare($sql);
-    if (!empty($params) && !empty($params)) {
-      $stmt->bind_param($types, ...$params);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-    return $user;
-}
-
-function modifyRecord($sql, $types, $params) {
-    global $dbconn;
-    $stmt = $dbconn->prepare($sql);
-    $stmt->bind_param($types, ...$params);
-    $result = $stmt->execute();
-    $stmt->close();
-    return $result;
-}
-
-function GetNameByID($ID){
-    global $dbconn;
-    if(CheckConnection())
-    {
-        $stmt = $dbconn->prepare('SELECT `NAME` FROM clients WHERE ID = ?');
-        $stmt->bind_param('i',$ID);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $username = $result->fetch_row();
-        $stmt->close();
-        if($username != null){
-            return (string)$username[0];
-        }else {
-            return "Not Found";
-        }
-        
-    }else {
-        return "Connection_Error";
-    }
-}
-
-function GetEmailByID($ID){
-    global $dbconn;
-    if(CheckConnection())
-    {
-        $stmt = $dbconn->prepare('SELECT `EMAIL` FROM clients WHERE ID = ?');
-        $stmt->bind_param('i',$ID);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $username = $result->fetch_row();
-        $stmt->close();
-        if($username != null){
-            return (string)$username[0];
-        }else {
-            return "Not Found";
-        }
-        
-    }else {
-        return "Connection_Error";
-    }
-}
-
-function GetPassowrdByID($id){
-    global $dbconn;
-    if(CheckConnection()){
-        $stmt = $dbconn->prepare('SELECT `PASSWORD` FROM clients WHERE ID = ?');
-        $stmt->bind_param('i',$id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $pass = $result->fetch_row();
-        $stmt->close();
-        if($pass != null){   
-            return $pass[0];
-        }else{
-            return "Not Found";
-        }
-    }else{
-        return ("Error");
-    }
-}
-
-function GetAllDataByID($id) {
-    global $dbconn;
-    if(CheckConnection())
-    {
-        $stmt = $dbconn->prepare('SELECT * FROM clients WHERE ID = ?');
-        $stmt->bind_param('i',$id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-        if($row != null){
-            return $row;
-        }else {
-            return "Not Found";
-        }
-        
-    }else {
-        return "Connection_Error";
-    }
-}
 
 function CheckConnection(){
     global $dbconn;
@@ -299,24 +124,6 @@ function CheckConnection(){
         return false;
     }else {
         return true;
-    }
-}
-
-function GetUserIDByEmail($email){
-    global $dbconn;
-    $id = 0;
-    $stmt = $dbconn->prepare('SELECT `ID` FROM clients WHERE `EMAIL` = ?');
-    $stmt->bind_param('s',$email);
-    $stmt->execute();
-    $stmt->store_result();
-    $stmt->bind_result($id);
-    if(($result = $stmt->fetch()) == true)
-    {
-        $stmt->close();
-        return (int)$id;
-    }else{
-        $stmt->close();
-        return 0;
     }
 }
 
@@ -456,6 +263,168 @@ function CheckForExistingToken($userid,$email){
         return false;
     } else {
         return true;
+    }
+}
+
+
+Class Database_Functions{
+
+    function GetIdByName($name){
+        global $dbconn;
+        if(CheckConnection())
+        {
+            $stmt = $dbconn->prepare('SELECT ID FROM clients WHERE USERNAME = ?');
+            $stmt->bind_param('s',$name);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $ID = $result->fetch_row();
+            $stmt->close();
+            if($ID != null){
+                return (int)$ID[0];
+            }else {
+                return null;
+            }
+            
+        }else {
+            return "Connection_Error";
+        }
+    }
+    
+    function getSingleRecord($sql, $types = null, $params = []){
+        global $dbconn;
+        if(CheckConnection()){
+            $stmt = $dbconn->prepare($sql);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $User = $result->fetch_assoc();
+            $stmt->close();
+            return $User;
+        }else{
+            return false;
+        }
+    }
+    
+    function getMultipleRecords($sql, $types = null, $params = []){
+        global $dbconn;
+        $stmt = $dbconn->prepare($sql);
+        if (!empty($params) && !empty($params)) {
+          $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $user;
+    }
+    
+    function modifyRecord($sql, $types, $params) {
+        global $dbconn;
+        $stmt = $dbconn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $result = $stmt->execute();
+        $stmt->close();
+        return $result;
+    }
+    
+    function GetNameByID($ID){
+        global $dbconn;
+        if(CheckConnection())
+        {
+            $stmt = $dbconn->prepare('SELECT `NAME` FROM clients WHERE ID = ?');
+            $stmt->bind_param('i',$ID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $username = $result->fetch_row();
+            $stmt->close();
+            if($username != null){
+                return (string)$username[0];
+            }else {
+                return "Not Found";
+            }
+            
+        }else {
+            return "Connection_Error";
+        }
+    }
+    
+    function GetEmailByID($ID){
+        global $dbconn;
+        if(CheckConnection())
+        {
+            $stmt = $dbconn->prepare('SELECT `EMAIL` FROM clients WHERE ID = ?');
+            $stmt->bind_param('i',$ID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $username = $result->fetch_row();
+            $stmt->close();
+            if($username != null){
+                return (string)$username[0];
+            }else {
+                return "Not Found";
+            }
+            
+        }else {
+            return "Connection_Error";
+        }
+    }
+    
+    function GetPassowrdByID($id){
+        global $dbconn;
+        if(CheckConnection()){
+            $stmt = $dbconn->prepare('SELECT `PASSWORD` FROM clients WHERE ID = ?');
+            $stmt->bind_param('i',$id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $pass = $result->fetch_row();
+            $stmt->close();
+            if($pass != null){   
+                return $pass[0];
+            }else{
+                return "Not Found";
+            }
+        }else{
+            return ("Error");
+        }
+    }
+    
+    function GetAllDataByID($id) {
+        global $dbconn;
+        if(CheckConnection())
+        {
+            $stmt = $dbconn->prepare('SELECT * FROM clients WHERE ID = ?');
+            $stmt->bind_param('i',$id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+            if($row != null){
+                return $row;
+            }else {
+                return "Not Found";
+            }
+            
+        }else {
+            return "Connection_Error";
+        }
+    }
+    
+    function GetUserIDByEmail($email){
+        global $dbconn;
+        $id = 0;
+        $stmt = $dbconn->prepare('SELECT `ID` FROM clients WHERE `EMAIL` = ?');
+        $stmt->bind_param('s',$email);
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($id);
+        if(($result = $stmt->fetch()) == true)
+        {
+            $stmt->close();
+            return (int)$id;
+        }else{
+            $stmt->close();
+            return 0;
+        }
     }
 }
 

@@ -5,11 +5,19 @@ function GenerateNewSalt() {
    return $newstr;
 }
 
-function AdvancedEncryptionWithSalt($key, $salt){
-    $enc_str = crypt($key,$salt);
-    $enc_str = $salt . $enc_str;
-    $enc_str = hash("sha256", $enc_str);
+function AdvancedEncryption($key){
+    $enc_str = password_hash(crypt($key,$key), PASSWORD_DEFAULT);
     return $enc_str;
+}
+
+function AdvancedEncryptionVerify($key, $pw_key){
+    $res = password_verify(crypt($key,$key), $pw_key);
+    if($res)
+    {
+        return true;
+    }else {
+        return false;
+    }
 }
 
 function TOKEN_GENERATE_NEW(){
