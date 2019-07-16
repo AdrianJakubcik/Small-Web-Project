@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css?family=Lato:300,400,700');
 body {
-    background-image: linear-gradient( #737373, #adadad) !important;
+    /*background-image: linear-gradient( #737373, #adadad) !important;
     z-index: 10;
-    max-height: 100vh !important;
-    height: 100vh;
+    max-height: 100vh;
+    height: 100vh;*/
 }
 
 .container {
@@ -170,31 +170,30 @@ input:focus {
 
 @media screen and (max-height: 1080) {
     .container {
-        margin-top: 150px !important;
+        transform: translateY(50%);
         max-width: 19.2% !important;
     }
 }
 
 @media all and (min-height: 1200) {
     .container {
-        margin-top: 300px !important;
+        transform: translateY(50%);
         max-width: 22.2% !important;
     }
 }
 
 .container .forgot_pw_container {
-    background: #8b8b8b;
-    border: 1px solid #5c5c5c;
     text-align: center;
-    max-width: 40%;
+    max-width: 45%;
     margin-left: auto;
     margin-right: auto;
     font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     cursor: pointer;
     margin-top: 4px !important;
-    border-radius: 14px;
     font-weight: 600;
     display: none;
+    transform: scale(0.9);
+    color: rgb(79, 79, 216);
 }
 
 .container .forgot_pw_container .show {
@@ -206,10 +205,12 @@ input:focus {
 }
 
 .container .forgot_pw_container:hover {
-    font-size: 105%;
-    box-shadow: 2px 1px rgb(29, 29, 29);
-    border-color: orange;
-    transform: scale(1.1);
+    transform: scale(0.95);
+    text-decoration: underline;
+}
+
+.container .forgot_pw_container:active {
+    color: rgb(160, 15, 160);
 }
 
 .container .submit-btn {

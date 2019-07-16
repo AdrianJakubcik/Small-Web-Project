@@ -1,10 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Lato:300,400,700');
-body {
-    background-image: linear-gradient( #737373, #adadad) !important;
-    z-index: 10;
-    max-height: 100vh !important;
-    height: 100vh;
-}
+body {}
 
 .container {
     font-family: 'Lato', sans-serif;
@@ -15,6 +10,10 @@ body {
     border-radius: 5px;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.1), 0 4px 4px rgba(0, 0, 0, 0.2);
     background: #fff;
+}
+
+main {
+    text-align: center;
 }
 
 nav.auth {
@@ -170,7 +169,7 @@ input:focus {
 
 @media screen and (max-height: 1080) {
     .container {
-        margin-top: 180px !important;
+        margin-top: auto !important;
         max-width: 19.2% !important;
     }
 }

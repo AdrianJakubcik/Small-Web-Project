@@ -188,6 +188,28 @@ function getSingleRecord($sql, $types = null, $params = []){
     }
 }
 
+function getMultipleRecords($sql, $types = null, $params = []){
+    global $dbconn;
+    $stmt = $dbconn->prepare($sql);
+    if (!empty($params) && !empty($params)) {
+      $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    return $user;
+}
+
+function modifyRecord($sql, $types, $params) {
+    global $dbconn;
+    $stmt = $dbconn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $result = $stmt->execute();
+    $stmt->close();
+    return $result;
+}
+
 function GetNameByID($ID){
     global $dbconn;
     if(CheckConnection())
@@ -294,15 +316,15 @@ function GetUserIDByEmail($email){
         return (int)$id;
     }else{
         $stmt->close();
-        return false;
+        return 0;
     }
 }
 
 function ResetPassword($email, $new_password){
     if(CheckConnection()){
-        if(GetUserIDByEmail($email))
-        {
-            $userid = GetUserIDByEmail($email);
+        $usr_id = GetUserIDByEmail($email);
+        if($usr_id != null || !empty($usr_id) || $usr_id <= 0){
+            //Reset
         }
     } else{
         return false;
@@ -351,20 +373,28 @@ function ResetPasswordExpirationCheck($ID){
 
 function ResetToken($email){
     if(CheckConnection()){
-        if(GetUserIDByEmail($email))
+        if(($userid = GetUserIDByEmail($email)) > 0)
         {
-            
-            $userid = GetUserIDByEmail($email);
-            if(!CheckForExistingToken($userid,$email)){
             //$token = strtoupper(bin2hex(random_bytes(26))); //Multiple Ways Of Generating Token (My Own Is Safer)
             $token = TOKEN_GENERATE_NEW();
-            if(Reset_Token_Add_DB($userid,$token)){
-                return true;
+            $reset_data = Reset_Token_Add_DB($userid,$token);
+            if(!CheckForExistingToken($userid,$email)){
+            if($reset_data != false){
+                return $reset_data;
             }else{
                 return false;
             }
         }else{
-            return 404;
+            $expFormat = mktime(
+                date("H"), date("i"), date("s"), date("m"), date("d")+3, date("Y")
+                );
+            $new_expDate = date("Y-m-d H:i:s",$expFormat);
+            $res = modifyExisitngToken($email,$userid,$token,$new_expDate);
+            if($res != false){
+                return $res;
+            }else{
+                return false;
+            }
         }
         }else{
             return false;
@@ -391,8 +421,25 @@ function Reset_Token_Add_DB($userid,$token){
     $suc = $stmt->execute();
     $stmt->close();
     if($suc){
-        return true;
+        $Token_Data['Token'] = $token;
+        $Token_Data['Expiration'] = $expDate; 
+        return $Token_Data;
     }else {
+        return false;
+    }
+}
+
+function modifyExisitngToken($email,$userid, $new_token, $new_expdate){
+    global $dbconn;
+    $stmt = $dbconn->prepare('UPDATE password_resets SET TOKEN = ?, EXPIRATION = ? WHERE USER_EMAIL = ? AND `USER_ID` = ?');
+    $stmt->bind_param('sssi',$new_token,$new_expdate,$email,$userid);
+    $res = $stmt->execute();
+    $stmt->close();
+    if($res){
+        $data['Token'] = $new_token;
+        $data['Expiration'] = $new_expdate;
+        return $data;
+    }else{
         return false;
     }
 }

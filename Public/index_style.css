@@ -1,0 +1,130 @@
+.container_message {
+    /*background: rgba(82, 82, 82, 0.8);*/
+    padding: 20px;
+    /*border: 1px solid #5d5d5d;*/
+    border-radius: 8px;
+    text-align: center;
+    max-width: 85%;
+    max-height: 100%;
+    height: auto;
+    margin-top: 25px;
+    margin-left: auto;
+    margin-right: auto;
+    color: white;
+}
+
+.container_message>div {
+    padding-top: 5px;
+    padding-bottom: 10px;
+    max-width: 25%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.message_title>h2 {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 34px;
+}
+
+.container_message .message_para {
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    margin-top: 20px;
+    color: black;
+    border: 2px solid black;
+    border-radius: 5px;
+    box-shadow: 3px 5px #4d4d4d;
+}
+
+.container_message .message_para#task.pending {
+    max-width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    border-color: gold;
+    box-shadow: none;
+    text-align: center;
+}
+
+.container_message .message_para#task.finished {
+    max-width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    border-color: green;
+    box-shadow: none;
+    text-align: center;
+}
+
+.container_message i.pending::before {
+    position: relative;
+    top: 5px;
+    content: url('https://img.icons8.com/color/32/000000/warning-shield.png');
+    margin-right: 3px;
+    display: inline-flex;
+}
+
+.container_message i.finished::after {
+    content: url('https://img.icons8.com/officel/32/000000/checked.png');
+    margin-right: 3px;
+    display: inline-flex;
+}
+
+.container_message .message_para#task p {
+    font-family: 'Courier New', Courier, monospace;
+    color: white;
+    font-size: 18px;
+}
+
+.container_message .message_para#task {
+    display: inline-block;
+    padding: 15px;
+}
+
+.container_message .message_para#task.pending span {
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    color: red;
+    font-size: 12px;
+}
+
+.container_message .message_para#task.pending span {
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    color: green;
+    font-size: 12px;
+}
+
+.container_message .tasks {
+    max-width: 50% !important;
+    width: auto;
+    padding: 50px;
+    margin-top: 25px;
+    background-color: rgba(136, 136, 136, 0.9);
+    border-radius: 8px;
+    box-shadow: 4px 4px 4px 4px #4d4d4d;
+    max-height: inherit;
+    height: auto;
+    float: left;
+}
+
+.container_message .tasks .task {
+    display: inline-block;
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+    color: white;
+    font-size: 28px;
+    margin-bottom: 42px;
+    text-decoration: none;
+    list-style: none;
+    padding-bottom: 5px;
+}
+
+.container_message .tasks .block {
+    display: block;
+}
+
+.container_message .tasks .task#pending {
+    color: gold;
+}
+
+.container_message .tasks .task#finished {
+    color: rgb(77, 77, 255);
+    background-color: rgba(131, 241, 131, 0.562);
+    padding: 3px;
+}
