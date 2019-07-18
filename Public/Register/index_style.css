@@ -167,14 +167,14 @@ input:focus {
     display: block;
 }
 
-@media screen and (max-height: 1080) {
+@media all and (min-width: 1200px) {
     .container {
-        margin-top: auto !important;
-        max-width: 19.2% !important;
+        margin-top: auto+50px !important;
+        width: 25.2% !important;
     }
 }
 
-@media all and (min-height: 1200) {
+@media all and (min-height: 1200px) {
     .container {
         margin-top: 260px !important;
         max-width: 22.2% !important;
