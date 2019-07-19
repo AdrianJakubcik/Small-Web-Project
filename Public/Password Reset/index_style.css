@@ -226,7 +226,7 @@ label {
 
 @media all and (min-width: 1200px) {
     .container {
-        margin-top: auto+150px !important;
+        margin-top: 10% !important;
         width: 25.2% !important;
     }
 }

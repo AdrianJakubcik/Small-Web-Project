@@ -169,7 +169,7 @@ input:focus {
 
 @media all and (min-width: 1200px) {
     .container {
-        margin-top: auto+150px !important;
+        margin-top: 6% !important;
         width: 25.2% !important;
     }
 }
