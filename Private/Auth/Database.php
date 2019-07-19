@@ -11,11 +11,24 @@ if($dbconn->connect_error){
     die("Connection to Database Failed!".$dbconn->connect_error);
 }
 
-$db_util = Database_Functions();
+function SetupDB()
+{
+    // CREATE TABLE IF NOT EXISTS `password_resets` ( `ID` INT NOT NULL AUTO_INCREMENT , `USER_ID` INT NOT NULL , `USER_EMAIL` TEXT NOT NULL , `TOKEN` VARCHAR(250) NOT NULL , `EXPIRATION` DATETIME NOT NULL , PRIMARY KEY (`ID`), UNIQUE `USER_ID` (`USER_ID`)) ENGINE = InnoDB;
+    //CREATE TABLE IF NOT EXISTS `Clients` ( `ID` INT NOT NULL AUTO_INCREMENT , `USERNAME` VARCHAR(252) NOT NULL , `PASSWORD` VARCHAR(280) NOT NULL , `EMAIL` VARCHAR(250) NOT NULL , `REG_DATE` DATE NOT NULL , `RANK` INT NOT NULL DEFAULT '1' , `ISADMIN` BOOLEAN NULL DEFAULT FALSE , PRIMARY KEY (`ID`), UNIQUE `EMAIL` (`EMAIL`)) ENGINE = InnoDB;
 
-function Authenticate_Client($username, $passsword){
+}
+
+$db = new Database_Functions();
+
+function Authenticate_Client($username, $password){
     try {
-        //code...
+        global $db;
+        $key = $db->getSingleRecord('SELECT * FROM Clients WHERE USERNAME = ?','s',$username)['PASSWORD'];
+        if(password_verify($password,$key)){
+            return true;
+        }else {
+            return false;
+        }
     } catch (\Throwable $th) {
         throw $th;
     }
@@ -24,19 +37,18 @@ function Authenticate_Client($username, $passsword){
 function ProccessNewUser($user, $password, $email) {
     $user = TestInput($user);
     $date = date("Y-m-d");
-    $salt = GenerateNewSalt();
-    $password = AdvancedEncryptionWithSalt($password,$salt);
-    if(AddNewUserToDB($user,$date,$password,$salt,$email)){
+    $password = password_hash($password, PASSWORD_DEFAULT);
+    if(AddNewUserToDB($user,$date,$password,$email)){
         return true;
     }else{
         return false;
     }
 }
 
-function AddNewUserToDB($user,$date,$password,$salt,$email){
+function AddNewUserToDB($user,$date,$password,$email){
     global $dbconn;
-    $stmt = $dbconn->prepare('INSERT INTO clients (USERNAME,PASSWORD,KEY_SALT,EMAIL,REG_DATE) VALUES (?,?,?,?,?)');
-    $stmt->bind_param('sssss',$user,$password,$salt,$email,$date);
+    $stmt = $dbconn->prepare('INSERT INTO clients (USERNAME,PASSWORD,EMAIL,REG_DATE) VALUES (?,?,?,?)');
+    $stmt->bind_param('ssss',$user,$password,$email,$date);
     if($stmt->execute()){
         $stmt->close();
         return true;
@@ -100,9 +112,9 @@ function EmailAlreadyInUse($email) {
 function BeforeAddingToDBChecks($user,$email) {
     if(UserExists($user))
     {
-        return "Username has been taken already by someone else!";
+        return "Username has been taken by someone else!";
     }else if (EmailAlreadyInUse($email)) {
-        return "Email is being used already by someone else!";
+        return "Email is already being used by someone else!";
     }
     else {
         return "true";
@@ -128,8 +140,9 @@ function CheckConnection(){
 }
 
 function ResetPassword($email, $new_password){
+    global $db;
     if(CheckConnection()){
-        $usr_id = GetUserIDByEmail($email);
+        $usr_id = $db->getUserIDByEmail($email);
         if($usr_id != null || !empty($usr_id) || $usr_id <= 0){
             //Reset
         }
@@ -140,8 +153,9 @@ function ResetPassword($email, $new_password){
 
 function ResetPasswordExistsCheck($id){
     global $dbconn;
+    global $db;
     $id = 0;
-    $email = GetEmailByID($id);
+    $email = $db->getEmailByID($id);
     $stmt = $dbconn->prepare('SELECT ID FROM `password_resets` WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
     $stmt->bind_param('is',$id,$email);
     $stmt->execute();
@@ -171,7 +185,7 @@ function ResetPasswordExpirationCheck($ID){
     $stmt->bind_result($expiration);
     if(($result = $stmt->fetch()) == true){
         $stmt->close();
-        echo($expiration);
+        return $expiration;
     }else {
         $stmt->close();
         return false;
@@ -180,7 +194,9 @@ function ResetPasswordExpirationCheck($ID){
 
 function ResetToken($email){
     if(CheckConnection()){
-        if(($userid = GetUserIDByEmail($email)) > 0)
+        global $db;
+        $userid = $db->getUserIDByEmail($email);
+        if($userid > 0)
         {
             //$token = strtoupper(bin2hex(random_bytes(26))); //Multiple Ways Of Generating Token (My Own Is Safer)
             $token = TOKEN_GENERATE_NEW();
@@ -212,13 +228,12 @@ function ResetToken($email){
 }
 
 function Reset_Token_Add_DB($userid,$token){
-    if(GetEmailByID($userid))
-    {
-        $email = GetEmailByID($userid);
-    }else {
+    global $db;
+    global $dbconn;
+    $email = $db->getEmailByID($userid);
+    if(empty($email) || $email == null){
         return false;
     }
-    global $dbconn;
     $expFormat = mktime(
         date("H"), date("i"), date("s"), date("m"), date("d")+3, date("Y")
         );
@@ -269,7 +284,7 @@ function CheckForExistingToken($userid,$email){
 
 Class Database_Functions{
 
-    function GetIdByName($name){
+    function getIdByName($name){
         global $dbconn;
         if(CheckConnection())
         {
@@ -327,7 +342,7 @@ Class Database_Functions{
         return $result;
     }
     
-    function GetNameByID($ID){
+    function getNameByID($ID){
         global $dbconn;
         if(CheckConnection())
         {
@@ -348,7 +363,7 @@ Class Database_Functions{
         }
     }
     
-    function GetEmailByID($ID){
+    function getEmailByID($ID){
         global $dbconn;
         if(CheckConnection())
         {
@@ -369,7 +384,7 @@ Class Database_Functions{
         }
     }
     
-    function GetPassowrdByID($id){
+    function getPassowrdByID($id){
         global $dbconn;
         if(CheckConnection()){
             $stmt = $dbconn->prepare('SELECT `PASSWORD` FROM clients WHERE ID = ?');
@@ -388,7 +403,7 @@ Class Database_Functions{
         }
     }
     
-    function GetAllDataByID($id) {
+    function getAllDataByID($id) {
         global $dbconn;
         if(CheckConnection())
         {
@@ -409,7 +424,7 @@ Class Database_Functions{
         }
     }
     
-    function GetUserIDByEmail($email){
+    function getUserIDByEmail($email){
         global $dbconn;
         $id = 0;
         $stmt = $dbconn->prepare('SELECT `ID` FROM clients WHERE `EMAIL` = ?');

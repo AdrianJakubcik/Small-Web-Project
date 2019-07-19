@@ -457,7 +457,7 @@ Secondary Fixed Navigation
         transition: opacity 0.2s;
     }
     nav ul .active {
-        background-color: #4a4a4a;
+        background-color: #6b6b6b;
     }
     .cd-secondary-nav li a:hover b,
     .cd-secondary-nav li a.active b {

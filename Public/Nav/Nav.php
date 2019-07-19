@@ -1,21 +1,3 @@
-<!--<header class="cd-header">
-		<div id="cd-logo"><a href="#0"><img src="img/cd-logo.svg" alt="Logo"></a></div>
-		<nav class="cd-primary-nav">
-			<ul>
-				
-				<li><a href="#0">Login</a></li>
-				<li><a href="#0">Tour</a></li>
-				<li><a href="#0">Buy</a></li>
-			</ul>
-		</nav> 
-	</header>
-	<section id="cd-intro">
-		<div id="cd-intro-tagline">
-			<h1>Secondary Fixed Navigation</h1>
-			<a href="http://codyhouse.co/?p=296" class="cd-btn">Article &amp; Download</a>
-		</div> 
-	</section> -->
-
 	<div class="cd-secondary-nav">
 		<a href="#0" class="cd-secondary-nav-trigger">Menu<span></span></a> <!-- button visible on small devices -->
 		<nav>

@@ -14,19 +14,19 @@
 </head>
 
 <body>
-    <section id="cd-intro">
+    <!--<section id="cd-intro">
         <div id="cd-intro-tagline">
             <h1>Welcome To Paradise</h1>
             <a href="#" class="cd-btn">Scroll Down</a>
         </div>
-    </section>
+    </section>-->
     <main class="body">
         <!--  Nav Menu Begin -->
         <?php require('Nav/Nav.php'); ?>
         <!--  Nav Menu End  -->
 
         <!-- Body Begin -->
-        <div class="container_message">
+        <!--<div class="container_message">
             <div class="tasks">
                 <ul>
                     <div class="block"><i class="finished"><li class="task" id="finished">Build Database</li></i></div>
@@ -34,7 +34,7 @@
                     <div class="block"><i class="pending"><li class="task" id="pending">Validate Forms</li></i></div>
                 </ul>
             </div>
-        </div>
+        </div>-->
         <!-- Body End -->
         <?php require('Nav/Nav_Footer.php');?>
         <script>
