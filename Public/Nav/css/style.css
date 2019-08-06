@@ -375,6 +375,7 @@ Secondary Fixed Navigation
     padding: 1.6em;
     border-bottom: 1px solid #092645;
     color: #f0eee1;
+    text-decoration: none !important;
 }
 
 .cd-secondary-nav li:last-child a {

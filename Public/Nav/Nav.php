@@ -27,7 +27,7 @@
 					</a>
 				</li>
 				<li <?php if($_SERVER['SCRIPT_NAME']=="/TestingArea51/Public/FAQ/index.php") { ?>  class="active"   <?php   }  ?>>
-					<a href="#cd-placeholder-5" id="Faq">
+					<a href="<?php if($_SERVER['PHP_SELF'] == "/TestingArea51/Public/index.php") {echo('FAQ?d='.crypt(date('H:i:s_Y-m-d'),bin2hex(random_bytes(12))));} else {echo('../FAQ?d='.crypt(date('H:i:s_Y-m-d'),bin2hex(random_bytes(12))));}?>" id="Faq">
 						<b>FAQ</b>
 						<span></span><!-- icon -->
 					</a>
