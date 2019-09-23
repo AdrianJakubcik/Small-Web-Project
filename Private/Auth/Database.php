@@ -7,6 +7,8 @@ $username = constant("username");
 $password = constant("password");
 $database = constant("database");
 $dbconn = new mysqli($host,$username,$password,$database);
+$db = new Database_Functions($dbconn);
+$pw_reset_util = new ResetPasswordUtilities($dbconn,$db);
 if($dbconn->connect_error){
     die("Connection to Database Failed!".$dbconn->connect_error);
 }
@@ -18,7 +20,6 @@ function SetupDB()
 
 }
 
-$db = new Database_Functions();
 
 function Authenticate_Client($username, $password){
     try {
@@ -129,9 +130,11 @@ function TestInput($data) {
 }
 
 
-function CheckConnection(){
+function CheckConnection(mysqli $conn = null){
     global $dbconn;
-    if($dbconn->connect_error)
+    if($conn == null)
+        $conn = $dbconn;
+    if($conn->connect_error)
     {
         return false;
     }else {
@@ -139,156 +142,221 @@ function CheckConnection(){
     }
 }
 
-function ResetPassword($email, $new_password){
-    global $db;
-    if(CheckConnection()){
-        $usr_id = $db->getUserIDByEmail($email);
-        if($usr_id != null || !empty($usr_id) || $usr_id <= 0){
-            //Reset
+/**
+ * Summary of ResetPasswordUtilities
+ * @param string $db_table
+ * @throws 
+ */
+class ResetPasswordUtilities{
+
+    private $table;
+    public $dbconn;
+    public $db;
+
+    public function __construct(mysqli $db_conn, Database_Functions $db ,$db_table = "password_resets")
+    {   
+        $this->db = $db;
+        if(CheckConnection($db_conn)){
+            $this->dbconn = $db_conn;
         }
-    } else{
-        return false;
-    }
-}
-
-function ResetPasswordExistsCheck($id){
-    global $dbconn;
-    global $db;
-    $id = 0;
-    $email = $db->getEmailByID($id);
-    $stmt = $dbconn->prepare('SELECT ID FROM `password_resets` WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
-    $stmt->bind_param('is',$id,$email);
-    $stmt->execute();
-    $stmt->store_result();
-    $stmt->bind_result($id);
-    if(($result = $stmt->fetch()) == true){
-        $stmt->close();
-        return (int)$id;
-    }else {
-        return false;
-    }
-}
-
-function ResetPasswordExpirationCheck($ID){
-    $expiration = "";
-    if(ResetPasswordExistsCheck($ID))
-    {
-        $RES_ID = (int)ResetPasswordExistsCheck($ID);
-    }else{
-        return false;
-    }
-    global $dbconn;
-    $stmt = $dbconn->prepare('SELECT EXPIRATION FROM `password_resets` WHERE ID = ?');
-    $stmt->bind_param('i',$RES_ID);
-    $stmt->execute();
-    $stmt->store_result();
-    $stmt->bind_result($expiration);
-    if(($result = $stmt->fetch()) == true){
-        $stmt->close();
-        return $expiration;
-    }else {
-        $stmt->close();
-        return false;
-    }
-}
-
-function ResetToken($email){
-    if(CheckConnection()){
-        global $db;
-        $userid = $db->getUserIDByEmail($email);
-        if($userid > 0)
+        if($db->exists_table($db_table))
         {
-            //$token = strtoupper(bin2hex(random_bytes(26))); //Multiple Ways Of Generating Token (My Own Is Safer)
-            $token = TOKEN_GENERATE_NEW();
-            $reset_data = Reset_Token_Add_DB($userid,$token);
-            if(!CheckForExistingToken($userid,$email)){
-            if($reset_data != false){
-                return $reset_data;
-            }else{
-                return false;
-            }
-        }else{
-            $expFormat = mktime(
-                date("H"), date("i"), date("s"), date("m"), date("d")+3, date("Y")
-                );
-            $new_expDate = date("Y-m-d H:i:s",$expFormat);
-            $res = modifyExisitngToken($email,$userid,$token,$new_expDate);
-            if($res != false){
-                return $res;
-            }else{
-                return false;
-            }
+            $this->table = $db_table;
         }
+    }
+
+    function ResetPassword($email, $new_password){
+        if(CheckConnection()){
+            $usr_id = $this->db->getUserIDByEmail($email);
+            if($usr_id != null || !empty($usr_id) || $usr_id <= 0){
+                //Reset Coding done here
+            }
+        } else{
+            return false;
+        }
+    }
+    
+    function ResetPasswordExistsCheck($id){
+        $id = 0;
+        $email = $this->db->getEmailByID($id);
+        $stmt = $this->dbconn->prepare('SELECT ID FROM `password_resets` WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
+        $stmt->bind_param('is',$id,$email);
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($id);
+        if(($result = $stmt->fetch()) == true){
+            $stmt->close();
+            return (int)$id;
+        }else {
+            return false;
+        }
+    }
+    
+    function ResetPasswordExpirationCheck($ID){
+        $expiration = "";
+        if(ResetPasswordExistsCheck($ID))
+        {
+            $RES_ID = (int)ResetPasswordExistsCheck($ID);
         }else{
             return false;
         }
-    }else{
-        return false;
+        global $dbconn;
+        $stmt = $dbconn->prepare('SELECT EXPIRATION FROM `password_resets` WHERE ID = ?');
+        $stmt->bind_param('i',$RES_ID);
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($expiration);
+        if(($result = $stmt->fetch()) == true){
+            $stmt->close();
+            return $expiration;
+        }else {
+            $stmt->close();
+            return false;
+        }
+    }
+    
+    function ResetToken($email){
+        if(CheckConnection()){
+            global $db;
+            $userid = $db->getUserIDByEmail($email);
+            if($userid > 0)
+            {
+                //$token = strtoupper(bin2hex(random_bytes(26))); //Multiple Ways Of Generating Token Uncomment the one you would like to use.
+                //$token = TOKEN_GENERATE_NEW();
+
+                $reset_data = Reset_Token_Add_DB($userid,$token);
+                if(!CheckForExistingToken($userid,$email)){
+                if($reset_data != false){
+                    return $reset_data;
+                }else{
+                    return false;
+                }
+            }else{
+                $expFormat = mktime(
+                    date("H"), date("i"), date("s"), date("m"), date("d")+3, date("Y")
+                    );
+                $new_expDate = date("Y-m-d H:i:s",$expFormat);
+                $res = modifyExisitngToken($email,$userid,$token,$new_expDate);
+                if($res != false){
+                    return $res;
+                }else{
+                    return false;
+                }
+            }
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
+    
+    function Reset_Token_Add_DB($userid,$token){
+        global $db;
+        global $dbconn;
+        $email = $db->getEmailByID($userid);
+        if(empty($email) || $email == null){
+            return false;
+        }
+        $expFormat = mktime(
+            date("H"), date("i"), date("s"), date("m"), date("d")+3, date("Y")
+            );
+        $expDate = date("Y-m-d H:i:s",$expFormat);
+        $stmt = $dbconn->prepare('INSERT INTO password_resets (`USER_ID`,`USER_EMAIL`,TOKEN,EXPIRATION) VALUES (?,?,?,?)');
+        $stmt->bind_param('isss',$userid,$email,$token,$expDate);
+        $suc = $stmt->execute();
+        $stmt->close();
+        if($suc){
+            $Token_Data['Token'] = $token;
+            $Token_Data['Expiration'] = $expDate; 
+            return $Token_Data;
+        }else {
+            return false;
+        }
+    }
+    
+    function modifyExisitngToken($email,$userid, $new_token, $new_expdate){
+        global $dbconn;
+        $stmt = $dbconn->prepare('UPDATE password_resets SET TOKEN = ?, EXPIRATION = ? WHERE USER_EMAIL = ? AND `USER_ID` = ?');
+        $stmt->bind_param('sssi',$new_token,$new_expdate,$email,$userid);
+        $res = $stmt->execute();
+        $stmt->close();
+        if($res){
+            $data['Token'] = $new_token;
+            $data['Expiration'] = $new_expdate;
+            return $data;
+        }else{
+            return false;
+        }
+    }
+    
+    function checkForExistingToken($userid,$email){
+        global $dbconn;
+        $stmt = $dbconn->prepare('SELECT * FROM password_resets WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
+        $stmt->bind_param('is',$userid,$email);
+        $stmt->execute();
+        $stmt->store_result();
+        $rows = $stmt->num_rows;
+        $stmt->close();
+        if($rows == 0){
+            return false;
+        } else {
+            return true;
+        }
     }
 }
 
-function Reset_Token_Add_DB($userid,$token){
-    global $db;
-    global $dbconn;
-    $email = $db->getEmailByID($userid);
-    if(empty($email) || $email == null){
-        return false;
-    }
-    $expFormat = mktime(
-        date("H"), date("i"), date("s"), date("m"), date("d")+3, date("Y")
-        );
-    $expDate = date("Y-m-d H:i:s",$expFormat);
-    $stmt = $dbconn->prepare('INSERT INTO password_resets (`USER_ID`,`USER_EMAIL`,TOKEN,EXPIRATION) VALUES (?,?,?,?)');
-    $stmt->bind_param('isss',$userid,$email,$token,$expDate);
-    $suc = $stmt->execute();
-    $stmt->close();
-    if($suc){
-        $Token_Data['Token'] = $token;
-        $Token_Data['Expiration'] = $expDate; 
-        return $Token_Data;
-    }else {
-        return false;
-    }
-}
+/** 
+ * Database Functions serves as a static library for all the database neccessary functions.
+ * @param mysqli $db_conn
+ * @param string $db_table
+ * @throws Exception
+ * @todo Review!
+ */
+class Database_Functions{
 
-function modifyExisitngToken($email,$userid, $new_token, $new_expdate){
-    global $dbconn;
-    $stmt = $dbconn->prepare('UPDATE password_resets SET TOKEN = ?, EXPIRATION = ? WHERE USER_EMAIL = ? AND `USER_ID` = ?');
-    $stmt->bind_param('sssi',$new_token,$new_expdate,$email,$userid);
-    $res = $stmt->execute();
-    $stmt->close();
-    if($res){
-        $data['Token'] = $new_token;
-        $data['Expiration'] = $new_expdate;
-        return $data;
-    }else{
-        return false;
+    public $table;
+    private $dbconn;
+
+    public function __construct(mysqli $db_conn, $db_table = "clients")
+    {
+        try {
+            if (CheckConnection()) {
+                $this->dbconn = $db_conn;
+                if (exists_table($db_table) == true) {
+                    $this->table = $db_table;
+                } else
+                    throw new Exception("Table " . $db_table . " doesn't exist!", 404);
+            } else {
+                throw new Exception("A Connection Error Occured, Please Proceed By Reloading Your Web Browser.", 400);
+            }
+        } catch (Exception $error) {
+            header("HTTP/1.0 404");
+            die($error->getMessage());
+        }
     }
-}
 
-function CheckForExistingToken($userid,$email){
-    global $dbconn;
-    $stmt = $dbconn->prepare('SELECT * FROM password_resets WHERE `USER_ID` = ? AND `USER_EMAIL` = ?');
-    $stmt->bind_param('is',$userid,$email);
-    $stmt->execute();
-    $stmt->store_result();
-    $rows = $stmt->num_rows;
-    $stmt->close();
-    if($rows == 0){
-        return false;
-    } else {
-        return true;
+    function exists_table($table)
+    {
+        try {
+            if (CheckConnection()) {
+                $sql = $this->dbconn->prepare('SELECT 1 FROM ' . $table . ' LIMIT 1');
+                $sql->execute();
+                if ($sql->get_result() !== FALSE) {
+                    return true;
+                } else
+                    return $sql->get_result();
+            }
+        } catch (Exception $error) {
+            header("HTTP/1.1 404 Not Found");
+        }
     }
-}
-
-
-Class Database_Functions{
 
     function getIdByName($name){
         global $dbconn;
         if(CheckConnection())
         {
-            $stmt = $dbconn->prepare('SELECT ID FROM clients WHERE USERNAME = ?');
+            $stmt = $dbconn->prepare("SELECT ID FROM ".$this->table." WHERE USERNAME = ?");
             $stmt->bind_param('s',$name);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -346,7 +414,7 @@ Class Database_Functions{
         global $dbconn;
         if(CheckConnection())
         {
-            $stmt = $dbconn->prepare('SELECT `NAME` FROM clients WHERE ID = ?');
+            $stmt = $dbconn->prepare("SELECT `NAME` FROM ".$this->table." WHERE ID = ?");
             $stmt->bind_param('i',$ID);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -367,7 +435,7 @@ Class Database_Functions{
         global $dbconn;
         if(CheckConnection())
         {
-            $stmt = $dbconn->prepare('SELECT `EMAIL` FROM clients WHERE ID = ?');
+            $stmt = $dbconn->prepare('SELECT `EMAIL` FROM '.$this->table.' WHERE ID = ?');
             $stmt->bind_param('i',$ID);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -387,7 +455,7 @@ Class Database_Functions{
     function getPassowrdByID($id){
         global $dbconn;
         if(CheckConnection()){
-            $stmt = $dbconn->prepare('SELECT `PASSWORD` FROM clients WHERE ID = ?');
+            $stmt = $dbconn->prepare('SELECT `PASSWORD` FROM '.$this->table.' WHERE ID = ?');
             $stmt->bind_param('i',$id);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -407,7 +475,7 @@ Class Database_Functions{
         global $dbconn;
         if(CheckConnection())
         {
-            $stmt = $dbconn->prepare('SELECT * FROM clients WHERE ID = ?');
+            $stmt = $dbconn->prepare('SELECT * FROM '.$this->table.' WHERE ID = ?');
             $stmt->bind_param('i',$id);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -427,7 +495,7 @@ Class Database_Functions{
     function getUserIDByEmail($email){
         global $dbconn;
         $id = 0;
-        $stmt = $dbconn->prepare('SELECT `ID` FROM clients WHERE `EMAIL` = ?');
+        $stmt = $dbconn->prepare('SELECT `ID` FROM '.$this->table.' WHERE `EMAIL` = ?');
         $stmt->bind_param('s',$email);
         $stmt->execute();
         $stmt->store_result();
