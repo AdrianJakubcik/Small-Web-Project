@@ -1,8 +1,6 @@
 # Small-Web-Project
 Keep it small and simple. ~Me, Myself, and I
 
-Demo Can Be Found [Here](http://educationaltestingweb.rf.gd/TestingArea51/Public)
-
 Feel Free to Analyze Code.
 
 ```
